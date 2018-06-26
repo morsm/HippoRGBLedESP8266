@@ -88,6 +88,48 @@ void handle_setconfig(AsyncWebServerRequest *request)
   }
 }
 
+void handle_setconfig_json(AsyncWebServerRequest *request, const char *data)
+{
+  int newBehavior = startAfterPowerOff;
+  bool bReset = false;
+
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject& obj = jsonBuffer.parseObject(data);
+
+  if (obj.containsKey("name"))
+  {
+    String val = obj["name"].as<String>();
+
+    if (! val.equals(lampName))
+    {
+      // Set the new name
+      set_name(val);
+
+      // Reset the processor, but first redirect the client
+      bReset = true;
+    }
+  }
+  if (obj.containsKey("behavior"))
+  {
+    newBehavior = obj["behavior"];
+    
+    if (newBehavior >= START_OFF && newBehavior <= START_LAST) startAfterPowerOff = newBehavior;
+  }
+
+  save_config();
+
+  if (bReset)
+  {
+    request->send(200, "text/plain", "RESET");
+
+    gResetFlag = true;    // Will reset in loop()
+  }
+  else
+  {
+    request->send(200, "text/plain", "OK");
+  }
+}
+
 void handle_switch_on(AsyncWebServerRequest *request)
 {
   switch_on();
@@ -120,6 +162,7 @@ void report_status(AsyncWebServerRequest *request)
 void report_status_json(AsyncWebServerRequest *request)
 {
   AsyncResponseStream *response = request->beginResponseStream("text/json");
+
   StaticJsonBuffer<200> jsonBuffer;
   JsonObject& obj = jsonBuffer.createObject();
 
@@ -169,6 +212,32 @@ void handle_rgb(AsyncWebServerRequest *request)
   report_status(request);
 }
 
+void handle_rgb_json(AsyncWebServerRequest *request, const char *data)
+{
+  int newBurning = burning, newRed = oldRed, newGreen = oldGreen, newBlue = oldBlue;
+
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject& obj = jsonBuffer.parseObject(data);
+
+  if (obj.containsKey("burn")) newBurning = obj["burn"];
+  if (obj.containsKey("red")) newRed = obj["red"];
+  if (obj.containsKey("green")) newGreen = obj["green"];
+  if (obj.containsKey("blue")) newBlue = obj["blue"];
+
+  if (newBurning > 0) newBurning = 1;
+  if (newRed < 0) newRed = 0;
+  if (newRed > 255) newRed = 255;
+  if (newGreen < 0) newGreen = 0;
+  if (newGreen > 255) newGreen = 255;
+  if (newBlue < 0) newBlue = 0;
+  if (newBlue > 255) newBlue = 255;
+
+  setRGB(newBurning, newRed, newGreen, newBlue);
+  saveLampState();
+  
+  request->send(200, "text/plain", "OK");
+}
+
 void sendHtml(AsyncWebServerRequest *request, String title, String body)
 {
   String response("<html><head><title>");
@@ -197,6 +266,13 @@ void setup_web_paths()
   server.on("/config.html", HTTP_GET, handle_config);
   server.on("/setconfig.html", HTTP_GET, handle_setconfig);
 
+  // Handle JSON posts
+  server.onRequestBody([](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) 
+  {
+    if (request->url() == "/rgb.json") handle_rgb_json(request, (const char *) data);
+    else if (request->url() == "/setconfig.json") handle_setconfig_json(request, (const char *) data);
+  });
+  
   server.begin();
 }
 
