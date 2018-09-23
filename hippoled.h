@@ -16,11 +16,26 @@
 #include <SyncClient.h>
 #include <tcp_axtls.h>
 
+#include <TelnetSpy.h>          // Include logging via telnet
+
 
 #define RED_PIN 12
 #define GREEN_PIN 13
 #define BLUE_PIN 14
 
+// Logging
+#define LOGTELNET 1     // Comment out for standard serial
+
+#ifdef LOGTELNET
+
+extern TelnetSpy LOG;
+#define SERIAL LOG
+
+#else
+#define SERIAL Serial
+#endif
+
+extern 
 // Prototypes
 void setRGB(const int burn, const int red, const int green, const int blue);
 void switch_on();

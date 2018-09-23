@@ -9,7 +9,7 @@ void save_config()
   File f = SPIFFS.open("config.json", "w");
   if (! f)
   {
-    Serial.println("Could not save config to disk");
+    SERIAL.println("Could not save config to disk");
     return;
   }
 
@@ -28,7 +28,7 @@ bool load_config()
   File f = SPIFFS.open("config.json", "r");
   if (! f) 
   {
-    Serial.println("Cannot open config file");
+    SERIAL.println("Cannot open config file");
     return false;
   }
 
@@ -38,13 +38,13 @@ bool load_config()
 
   if (! obj.success())
   {
-    Serial.println("Could not parse config file");
+    SERIAL.println("Could not parse config file");
     return false;
   }
   else
   {
-    Serial.println("Config file:");
-    obj.prettyPrintTo(Serial);
+    SERIAL.println("Config file:");
+    obj.prettyPrintTo(SERIAL);
   }
 
   set_name(obj["name"].as<String>());
@@ -58,7 +58,7 @@ void saveLampState()
   File f = SPIFFS.open("lampstate.json", "w");
   if (! f)
   {
-    Serial.println("Could not save lamp state to disk");
+    SERIAL.println("Could not save lamp state to disk");
     return;
   }
 
@@ -79,7 +79,7 @@ bool loadLampState()
   File f = SPIFFS.open("lampstate.json", "r");
   if (! f) 
   {
-    Serial.println("Cannot open lamp state file");
+    SERIAL.println("Cannot open lamp state file");
     return false;
   }
 
@@ -89,13 +89,13 @@ bool loadLampState()
 
   if (! obj.success())
   {
-    Serial.println("Could not parse lamp state file");
+    SERIAL.println("Could not parse lamp state file");
     return false;
   }
   else
   {
-    Serial.println("Lamp state file:");
-    obj.prettyPrintTo(Serial);
+    SERIAL.println("Lamp state file:");
+    obj.prettyPrintTo(SERIAL);
   }
 
   burning = obj["burn"];

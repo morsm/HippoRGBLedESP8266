@@ -3,6 +3,7 @@
 #include "hippoled.h"
 #include "config.h"
 #include "webrequests.h"
+#include "ota.h"
 
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>            //Local DNS Server used for redirecting all requests to the configuration portal
@@ -11,6 +12,11 @@
 
 #include <ESP8266mDNS.h>        // Include the mDNS library
 #include <FS.h>
+
+
+#ifdef LOGTELNET
+TelnetSpy LOG;
+#endif
 
 
 AsyncWebServer server(8080);
@@ -25,6 +31,8 @@ bool gResetFlag = false;
 
 void setup()
 {
+  SERIAL.println("Hippotronics RGB_LED_Lamp v3.2.0");
+  
   // Configure pin outputs
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
@@ -39,15 +47,15 @@ void setup()
   // Generate random postfix for LED first time around
   lampName = "HippotronicsLED-" + String(random(1000, 2000));
   
-  Serial.begin(74880);
-  Serial.println("Hippotronics RGB LED Lamp started, initial name: " + lampName);
-  Serial.println("Chip real flash size: " + String(ESP.getFlashChipRealSize()));
+  SERIAL.begin(74880);
+  SERIAL.println("Hippotronics RGB LED Lamp started, initial name: " + lampName);
+  SERIAL.println("Chip real flash size: " + String(ESP.getFlashChipRealSize()));
 
   // Initialize file system
   fsOK = SPIFFS.begin();
   if (fsOK)
   {
-    Serial.println("File system ready");
+    SERIAL.println("File system ready");
     
     bool bConfigSuccess = load_config();
     
@@ -61,7 +69,7 @@ void setup()
   }
   else
   {
-    Serial.println("File system not available");
+    SERIAL.println("File system not available");
   }
  
   WiFiManager wifiManager;
@@ -73,23 +81,32 @@ void setup()
   String mdnsName = "HippoLed-" + lampName;
   if (!MDNS.begin(mdnsName.c_str())) 
   {             
-    Serial.println("Error setting up MDNS responder!");
+    SERIAL.println("Error setting up MDNS responder!");
   }
   else
   {
-    Serial.println("mDNS responder started with name " + mdnsName);
+    SERIAL.println("mDNS responder started with name " + mdnsName);
 
     // Add service
     MDNS.addService("http", "tcp", 80);
     MDNS.addService("hippohttp", "tcp", 8080);
   }
 
+  // Configure over-the-air upgrade (OTA)
+  setupOTA();
+  
+  // Setup internal web server
   setup_web_paths();
 }
 
 
-void loop() {
-  // put your main code here, to run repeatedly:
+void loop() 
+{
+  // Handle logging
+#ifdef LOGTELNET
+  LOG.handle();
+#endif
+  
   if (gResetFlag)
   {
     delay(1000);    // Reset because config changed, give time to send data
@@ -98,6 +115,8 @@ void loop() {
 
   delay(1000);
 
+  // See if over-the-air upgrade (OTA) is available
+  handleOTA();
 }
 
 
