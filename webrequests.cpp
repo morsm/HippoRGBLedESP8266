@@ -175,6 +175,19 @@ void report_status_json(AsyncWebServerRequest *request)
   request->send(response);
 }
 
+void report_version_json(AsyncWebServerRequest *request)
+{
+  AsyncResponseStream *response = request->beginResponseStream("text/json");
+
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject& obj = jsonBuffer.createObject();
+
+  obj["version"] = VERSION;
+
+  obj.printTo(*response);
+  request->send(response);
+}
+
 
 void handle_rgb(AsyncWebServerRequest *request)
 {
@@ -265,6 +278,8 @@ void setup_web_paths()
   
   server.on("/config.html", HTTP_GET, handle_config);
   server.on("/setconfig.html", HTTP_GET, handle_setconfig);
+
+  server.on("/version.json", HTTP_GET, report_version_json);
 
   // Handle JSON posts
   server.onRequestBody([](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) 

@@ -31,7 +31,8 @@ bool gResetFlag = false;
 
 void setup()
 {
-  SERIAL.println("Hippotronics RGB_LED_Lamp v3.2.0");
+  SERIAL.print("Hippotronics RGB_LED_Lamp ");
+  SERIAL.println(VERSION);
   
   // Configure pin outputs
   pinMode(RED_PIN, OUTPUT);
