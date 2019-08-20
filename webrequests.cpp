@@ -7,17 +7,35 @@
 void handle_index(AsyncWebServerRequest *request)
 {
   String response("<h1>Hippotronics LED lamp</h1>"
+    "<p>Software version:"
+    VERSION
+    "</p>"
     "<p><a href=\"on.html\">Switch On</a></p>" 
-    "<p><a href=\"off.html\">Switch Off</a></p>"
-    "<p><form method=\"GET\" action=\"rgb.html\">"
-    "Red <input type=\"text\" name=\"red\" value=\"");
+    "<p><a href=\"off.html\">Switch Off</a></p>");
 
-  response += oldRed;
-  response += "\"/><br/>Green <input type=\"text\" name=\"green\" value=\"";
-  response += oldGreen;
-  response += "\"/><br/>Blue <input type=\"text\" name=\"blue\" value=\"";
-  response += oldBlue;
-  response += "\"/><br/><input type=\"submit\"/></form></p>";
+  if (type == COLOR1D || type == COLORRGB || type == DIMMABLE)
+  {
+    
+    response +=  "<p><form method=\"GET\" action=\"rgb.html\">"
+      "Red <input type=\"text\" name=\"red\" value=\"";
+    response += oldRed;
+  
+    if (type == COLOR1D || type == COLORRGB)
+    {
+      response += "\"/><br/>Green <input type=\"text\" name=\"green\" value=\"";
+     response += oldGreen;
+    }
+  
+    if (type == COLORRGB)
+    {
+      response += "\"/><br/>Blue <input type=\"text\" name=\"blue\" value=\"";
+     response += oldBlue;
+    }
+    
+    response += "\"/><br/><input type=\"submit\"/></form></p>";
+
+  }
+  
   response += "</br><a href=\"/config.html\">Configuration</a>";
 
   sendHtml(request, "Hippotronics LED lamp " + lampName, response);
@@ -26,7 +44,7 @@ void handle_index(AsyncWebServerRequest *request)
 void handle_config(AsyncWebServerRequest *request)
 {
   String response("<h1>Configuration</h1>"
-    "<p style=\"color: red\">Note: setting host name resets lamp unit</p>"
+    "<p style=\"color: red\">Note: setting host name or changing the lamp type resets lamp unit</p>"
     "<p><form method=\"GET\" action=\"setconfig.html\">"
     "Name <input type=\"text\" name=\"name\" value=\"");
 
@@ -37,7 +55,27 @@ void handle_config(AsyncWebServerRequest *request)
   response += (START_ON == startAfterPowerOff) ? "checked" : "";
   response += "/><br/><label for=\"b_last\">Return to last state when power off</label><input type=\"radio\" name=\"behavior\" id=\"b_last\" value=\"2\" ";
   response += (START_LAST == startAfterPowerOff) ? "checked" : "";
-  response += "/><br/><input type=\"submit\"/></form></p>";
+  response += "/><br/>";
+
+  response += "<select name=\"lamptype\">";
+  response += "<option value=0 ";
+  response += (UNDEFINED == type) ? "selected" : "";
+  response += ">Not set</option>";
+  response += "<option value=1 ";
+  response += (DIMMABLE == type) ? "selected" : "";
+  response += ">Dimmable</option>";
+  response += "<option value=2 ";
+  response += (COLOR1D == type) ? "selected" : "";
+  response += ">Colour temperature, dimmable</option>";
+  response += "<option value=3 ";
+  response += (COLORRGB == type) ? "selected" : "";
+  response += ">Full colour</option>";
+  response += "<option value=4 ";
+  response += (SWITCH == type) ? "selected" : "";
+  response += ">On/off switch</option>";
+
+  response += "</select>";
+  response += "<input type=\"submit\"/></form></p>";
   response += "</br><a href=\"/\">Home</a>";
   
   sendHtml(request, "Hippotronics LED lamp configuration", response);
@@ -46,6 +84,7 @@ void handle_config(AsyncWebServerRequest *request)
 void handle_setconfig(AsyncWebServerRequest *request)
 {
   int newBehavior = startAfterPowerOff;
+  int newType = type;
   bool bReset = false;
   
   if (request->hasParam("name"))
@@ -62,6 +101,7 @@ void handle_setconfig(AsyncWebServerRequest *request)
       bReset = true;
     }
   }
+  
   if (request->hasParam("behavior"))
   {
     AsyncWebParameter *p = request->getParam("behavior");
@@ -69,6 +109,20 @@ void handle_setconfig(AsyncWebServerRequest *request)
     newBehavior = val.toInt();
     
     if (newBehavior >= START_OFF && newBehavior <= START_LAST) startAfterPowerOff = newBehavior;
+  }
+
+  if (request->hasParam("lamptype"))
+  {
+    AsyncWebParameter *p = request->getParam("lamptype");
+    String val = p->value().c_str();
+    newType = val.toInt();
+    
+    if (newType >= UNDEFINED && newType <= SWITCH && newType != type) 
+    {
+      type = newType;
+
+      bReset = true;
+    }
   }
 
   save_config();
@@ -91,6 +145,7 @@ void handle_setconfig(AsyncWebServerRequest *request)
 void handle_setconfig_json(AsyncWebServerRequest *request, const char *data)
 {
   int newBehavior = startAfterPowerOff;
+  int newType = type;
   bool bReset = false;
 
   StaticJsonBuffer<200> jsonBuffer;
@@ -114,6 +169,18 @@ void handle_setconfig_json(AsyncWebServerRequest *request, const char *data)
     newBehavior = obj["behavior"];
     
     if (newBehavior >= START_OFF && newBehavior <= START_LAST) startAfterPowerOff = newBehavior;
+  }
+
+  if (obj.containsKey("lamptype"))
+  {
+    newType = obj["lamptype"];
+    
+    if (newType >= UNDEFINED && newType <= SWITCH && newType != type) 
+    {
+      type = newType;
+
+      bReset = true;
+    }
   }
 
   save_config();

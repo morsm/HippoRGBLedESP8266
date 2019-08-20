@@ -24,7 +24,9 @@ bool fsOK = false;
 
 // Lamp state
 int burning = 1, oldRed = 200, oldGreen = 200, oldBlue = 100;
+
 // Configuration
+int type = UNDEFINED;
 int startAfterPowerOff = START_ON;
 String lampName = "HippotronicsLED";
 bool gResetFlag = false;
@@ -34,12 +36,6 @@ void setup()
   SERIAL.print("Hippotronics RGB_LED_Lamp ");
   SERIAL.println(VERSION);
   
-  // Configure pin outputs
-  pinMode(RED_PIN, OUTPUT);
-  pinMode(GREEN_PIN, OUTPUT);
-  pinMode(BLUE_PIN, OUTPUT);
-  setRGB(0,0,0,0);                // Default is off
-
   // if analog input pin 0 is unconnected, random analog
   // noise will cause the call to randomSeed() to generate
   // different seed numbers each time the sketch runs.
@@ -93,6 +89,9 @@ void setup()
     MDNS.addService("hippohttp", "tcp", 8080);
   }
 
+  // Set up lamp based on configuration
+  setupLamp();
+  
   // Configure over-the-air upgrade (OTA)
   setupOTA();
   
@@ -134,15 +133,51 @@ void setRGB(const int burn, const int red, const int green, const int blue)
   
   if (0 == burn)
   {
-    analogWrite(RED_PIN, 0);
-    analogWrite(GREEN_PIN, 0);
-    analogWrite(BLUE_PIN, 0);
+    switch (type)
+    {
+      case COLORRGB:
+        analogWrite(RED_PIN, 0);
+        analogWrite(GREEN_PIN, 0);
+        analogWrite(BLUE_PIN, 0);
+        break;
+
+      case DIMMABLE:
+        analogWrite(RED_PIN, 0);
+        break;
+
+      case COLOR1D:
+        analogWrite(RED_PIN, 0);
+        analogWrite(GREEN_PIN, 0);
+        break;
+
+      case SWITCH:
+        digitalWrite(SWITCH_PIN, LOW);
+        break;
+    }
   }
   else
   {
-    analogWrite(RED_PIN, oldRed);
-    analogWrite(GREEN_PIN, oldGreen);
-    analogWrite(BLUE_PIN, oldBlue);
+    switch (type)
+    {
+      case COLORRGB:
+        analogWrite(RED_PIN, oldRed);
+        analogWrite(GREEN_PIN, oldGreen);
+        analogWrite(BLUE_PIN, oldBlue);
+        break;
+
+      case DIMMABLE:
+        analogWrite(RED_PIN, oldRed);
+        break;
+
+      case COLOR1D:
+        analogWrite(RED_PIN, oldRed);
+        analogWrite(GREEN_PIN, oldGreen);
+        break;
+
+      case SWITCH:
+        digitalWrite(SWITCH_PIN, HIGH);
+        break;
+    }
   }
 }
 
@@ -184,6 +219,38 @@ void set_name(String val)
     lampName = hostName;
 }
 
+void setupLamp()
+{
+  switch (type)
+  {
+    case UNDEFINED:
+      break;
 
+    case DIMMABLE:
+      // One analog output
+      pinMode(RED_PIN, OUTPUT);
+      break;
+
+    case COLOR1D:
+      // Two analog outputs
+      pinMode(RED_PIN, OUTPUT);
+      pinMode(GREEN_PIN, OUTPUT);
+      break;
+
+    case COLORRGB:
+      // Three analog outputs
+      pinMode(RED_PIN, OUTPUT);
+      pinMode(GREEN_PIN, OUTPUT);
+      pinMode(BLUE_PIN, OUTPUT);
+      break;
+
+    case SWITCH:
+      // One digital output
+      pinMode(SWITCH_PIN, OUTPUT);
+      break;
+  }
+
+    setRGB(0,0,0,0);                // Default is off
+}
 
 

@@ -18,6 +18,7 @@ void save_config()
 
   obj["name"] = lampName;
   obj["behavior"] = startAfterPowerOff;
+  obj["lamptype"] = type;
 
   obj.prettyPrintTo(f);
   f.close();
@@ -49,6 +50,10 @@ bool load_config()
 
   set_name(obj["name"].as<String>());
   startAfterPowerOff = obj["behavior"];
+  if (obj.containsKey("lamptype"))
+    type = obj["lamptype"];
+  else
+    type = UNDEFINED;
 
   return true;
 }

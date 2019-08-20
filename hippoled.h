@@ -18,8 +18,9 @@
 
 #include <TelnetSpy.h>          // Include logging via telnet
 
-#define VERSION "3.2.1"
+#define VERSION "3.5.0"
 
+#define SWITCH_PIN 0
 #define RED_PIN 12
 #define GREEN_PIN 13
 #define BLUE_PIN 14
@@ -36,6 +37,15 @@ extern TelnetSpy LOG;
 #define SERIAL Serial
 #endif
 
+// New in version 3.5: lamp type
+enum {
+  UNDEFINED,
+  DIMMABLE,
+  COLOR1D,
+  COLORRGB,
+  SWITCH
+};
+
 extern 
 // Prototypes
 void setRGB(const int burn, const int red, const int green, const int blue);
@@ -43,6 +53,7 @@ void switch_on();
 void switch_off();
 void set_name(String val);
 bool isOn();
+void setupLamp();
 
 // Web server
 extern AsyncWebServer server;
@@ -51,7 +62,7 @@ extern AsyncWebServer server;
 extern bool fsOK;
 
 // Lamp state
-extern int burning, oldRed, oldGreen, oldBlue;
+extern int type, burning, oldRed, oldGreen, oldBlue;
 
 // Configuration
 enum
