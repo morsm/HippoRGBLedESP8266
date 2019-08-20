@@ -18,7 +18,7 @@
 
 #include <TelnetSpy.h>          // Include logging via telnet
 
-#define VERSION "3.5.0"
+#define VERSION "3.5.1"
 
 #define SWITCH_PIN 0
 #define RED_PIN 12

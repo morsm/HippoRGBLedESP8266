@@ -242,6 +242,23 @@ void report_status_json(AsyncWebServerRequest *request)
   request->send(response);
 }
 
+void report_config_json(AsyncWebServerRequest *request)
+{
+  AsyncResponseStream *response = request->beginResponseStream("text/json");
+
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject& obj = jsonBuffer.createObject();
+
+  obj["type"] = type;
+  obj["name"] = lampName;
+  obj["behavior"] = startAfterPowerOff;
+
+  obj.printTo(*response);
+  request->send(response);
+}
+
+
+
 void report_version_json(AsyncWebServerRequest *request)
 {
   AsyncResponseStream *response = request->beginResponseStream("text/json");
@@ -342,6 +359,7 @@ void setup_web_paths()
 
   server.on("/status.html", HTTP_GET, report_status);
   server.on("/status.json", HTTP_GET, report_status_json);
+  server.on("/config.json", HTTP_GET, report_config_json);
   
   server.on("/config.html", HTTP_GET, handle_config);
   server.on("/setconfig.html", HTTP_GET, handle_setconfig);
