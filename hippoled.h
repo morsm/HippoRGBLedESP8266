@@ -54,6 +54,7 @@ void switch_off();
 void set_name(String val);
 bool isOn();
 void setupLamp();
+void setupWifiManager();
 
 // Web server
 extern AsyncWebServer server;

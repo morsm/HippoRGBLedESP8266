@@ -7,8 +7,6 @@
 
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>            //Local DNS Server used for redirecting all requests to the configuration portal
-#define WIFI_MANAGER_USE_ASYNC_WEB_SERVER
-#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 
 #include <ESP8266mDNS.h>        // Include the mDNS library
 #include <FS.h>
@@ -68,12 +66,10 @@ void setup()
   {
     SERIAL.println("File system not available");
   }
- 
-  WiFiManager wifiManager;
 
-  // Create standard access point before configuration
-  wifiManager.autoConnect("Hippotronics");
-
+  // Wifi auto-config magic
+  setupWifiManager();
+  
   // Register with MDNS
   String mdnsName = "HippoLed-" + lampName;
   if (!MDNS.begin(mdnsName.c_str())) 
