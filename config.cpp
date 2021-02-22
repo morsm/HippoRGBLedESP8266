@@ -2,6 +2,7 @@
 
 #include "hippoled.h"
 #include "config.h"
+#include "sonoff.h"
 
 
 void save_config()
@@ -19,6 +20,12 @@ void save_config()
   obj["name"] = lampName;
   obj["behavior"] = startAfterPowerOff;
   obj["lamptype"] = type;
+
+  for (int i=0; i<3; i++)
+  {
+    String butname("sonoff_button" + String(i));
+    obj[butname] = SonoffButBehavior[i];
+  }
 
   obj.prettyPrintTo(f);
   f.close();
@@ -54,6 +61,13 @@ bool load_config()
     type = obj["lamptype"];
   else
     type = UNDEFINED;
+
+  for (int i=0; i<3; i++)
+  {
+    String butname("sonoff_button" + String(i));
+    if (obj.containsKey(butname))
+        SonoffButBehavior[i] = obj[butname];
+  }
 
   return true;
 }
@@ -110,5 +124,3 @@ bool loadLampState()
 
   return true;
 }
-
-

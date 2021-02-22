@@ -3,16 +3,22 @@
 #include "hippoled.h"
 #include "config.h"
 #include "webrequests.h"
+#include "sonoff.h"
 
 void handle_index(AsyncWebServerRequest *request)
 {
   String response("<h1>Hippotronics LED lamp</h1>"
     "<p>Software version:"
     VERSION
-    "</p>"
-    "<p><a href=\"on.html\">Switch On</a></p>" 
-    "<p><a href=\"off.html\">Switch Off</a></p>");
+    "</p>");
 
+  if (type != UNDEFINED)
+  {
+    response += "<p><a href=\"on.html\">Switch On</a></p>" 
+    "<p><a href=\"off.html\">Switch Off</a></p>";
+  }
+  else response += "<p>Please set lamp type in Configuration</p>";
+  
   if (type == COLOR1D || type == COLORRGB || type == DIMMABLE)
   {
     
@@ -49,14 +55,8 @@ void handle_config(AsyncWebServerRequest *request)
     "Name <input type=\"text\" name=\"name\" value=\"");
 
   response += lampName;
-  response += "\"/><br/>Power-on behavior<br/><label for=\"b_off\">Off</label><input type=\"radio\" name=\"behavior\" id=\"b_off\" value=\"0\" ";
-  response += (START_OFF == startAfterPowerOff) ? "checked" : "";
-  response += "/><br/><label for=\"b_on\">On</label><input type=\"radio\" name=\"behavior\" id=\"b_on\" value=\"1\" ";
-  response += (START_ON == startAfterPowerOff) ? "checked" : "";
-  response += "/><br/><label for=\"b_last\">Return to last state when power off</label><input type=\"radio\" name=\"behavior\" id=\"b_last\" value=\"2\" ";
-  response += (START_LAST == startAfterPowerOff) ? "checked" : "";
-  response += "/><br/>";
-
+  response += "\"/><br/><br/><b>Lamp type</b><br/>";
+  
   response += "<select name=\"lamptype\">";
   response += "<option value=0 ";
   response += (UNDEFINED == type) ? "selected" : "";
@@ -73,8 +73,36 @@ void handle_config(AsyncWebServerRequest *request)
   response += "<option value=4 ";
   response += (SWITCH == type) ? "selected" : "";
   response += ">On/off switch</option>";
-
+  response += "<option value=5 ";
+  response += (SONOFF_SWITCH == type) ? "selected" : "";
+  response += ">Sonoff R3 switch</option>";
   response += "</select>";
+
+  response += "<br/><br/><b>Power-on behavior</b><br/><label for=\"b_off\">Off</label><input type=\"radio\" name=\"behavior\" id=\"b_off\" value=\"0\" ";
+  response += (START_OFF == startAfterPowerOff) ? "checked" : "";
+  response += "/><br/><label for=\"b_on\">On</label><input type=\"radio\" name=\"behavior\" id=\"b_on\" value=\"1\" ";
+  response += (START_ON == startAfterPowerOff) ? "checked" : "";
+  response += "/><br/><label for=\"b_last\">Return to last state when power off</label><input type=\"radio\" name=\"behavior\" id=\"b_last\" value=\"2\" ";
+  response += (START_LAST == startAfterPowerOff) ? "checked" : "";
+  response += "/><br/>";
+
+
+  response += "<br/><br/><b>Sonoff Button behavior</b><br/>";
+  for (int i=0; i<3; i++)
+  {
+    String butidx(i);
+    String butname("sbut" + butidx);
+    
+    response += "Button " + butidx;
+    response += "&nbsp;<label for=\"" + butname + "_nothing\">Do nothing</label><input type=\"radio\" name=\"" + butname + "\" id=\"" + butname + "_nothing\" value=\"0\" ";
+    response += (BUTTON_DONOTHING == SonoffButBehavior[i]) ? "checked" : "";
+    response += "/>&nbsp;<label for=\"" + butname + "_relay\">Switch relay</label><input type=\"radio\" name=\"" + butname + "\" id=\"" + butname + "_relay\" value=\"1\" ";
+    response += (BUTTON_RELAY == SonoffButBehavior[i]) ? "checked" : "";
+    response += "/>&nbsp;<label for=\"" + butname + "_UDP\">UDP broadcast</label><input type=\"radio\" name=\"" + butname + "\" id=\"" + butname + "_udp\" value=\"2\" ";
+    response += (BUTTON_UDP == SonoffButBehavior[i]) ? "checked" : "";
+    response += "/><br/><br/>";
+  }
+
   response += "<input type=\"submit\"/></form></p>";
   response += "</br><a href=\"/\">Home</a>";
   
@@ -117,11 +145,25 @@ void handle_setconfig(AsyncWebServerRequest *request)
     String val = p->value().c_str();
     newType = val.toInt();
     
-    if (newType >= UNDEFINED && newType <= SWITCH && newType != type) 
+    if (newType >= UNDEFINED && newType <= SONOFF_SWITCH && newType != type) 
     {
       type = newType;
 
       bReset = true;
+    }
+  }
+
+  // Sonoff buttons
+  for (int i=0; i<3; i++)
+  {
+    String butidx(i);
+    String butname("sbut" + butidx);
+
+    if (request->hasParam(butname))
+    {
+      AsyncWebParameter *p = request->getParam(butname);
+      String val = p->value().c_str();
+      SonoffButBehavior[i] = val.toInt();      
     }
   }
 
@@ -175,7 +217,7 @@ void handle_setconfig_json(AsyncWebServerRequest *request, const char *data)
   {
     newType = obj["lamptype"];
     
-    if (newType >= UNDEFINED && newType <= SWITCH && newType != type) 
+    if (newType >= UNDEFINED && newType <= SONOFF_SWITCH && newType != type) 
     {
       type = newType;
 
@@ -375,4 +417,3 @@ void setup_web_paths()
   
   server.begin();
 }
-

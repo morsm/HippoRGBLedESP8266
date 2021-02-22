@@ -18,12 +18,25 @@
 
 #include <TelnetSpy.h>          // Include logging via telnet
 
-#define VERSION "3.5.1"
+#define VERSION "3.6.0"
 
+
+/// PIN DEFINITIONS
+
+// Single relay as in original Office, Kitchen, Table with ESP8266 relay board
 #define SWITCH_PIN 0
+
+// RGB version as in BoozyLamps
 #define RED_PIN 12
 #define GREEN_PIN 13
 #define BLUE_PIN 14
+
+#define SONOFF_SWITCH_PIN 12
+#define SONOFF_LED 13
+
+/////
+
+
 
 // Logging
 #define LOGTELNET 1     // Comment out for standard serial
@@ -43,7 +56,8 @@ enum {
   DIMMABLE,
   COLOR1D,
   COLORRGB,
-  SWITCH
+  SWITCH,
+  SONOFF_SWITCH     // version 3.6: Sonoff R3
 };
 
 extern 
@@ -51,10 +65,12 @@ extern
 void setRGB(const int burn, const int red, const int green, const int blue);
 void switch_on();
 void switch_off();
+void toggle();
 void set_name(String val);
 bool isOn();
 void setupLamp();
 void setupWifiManager();
+bool isWifiConnected();
 
 // Web server
 extern AsyncWebServer server;
@@ -77,4 +93,3 @@ extern int startAfterPowerOff;
 extern String lampName;
 
 extern bool gResetFlag;
-

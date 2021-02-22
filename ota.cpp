@@ -1,3 +1,5 @@
+#include <ArduinoOTA.h>
+
 #include "hippoled.h"
 
 #include <ArduinoOTA.h>
@@ -20,18 +22,7 @@ void setupOTA()
   // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
 
   ArduinoOTA.onStart([]() {
-    String type;
-    bool unmountSPIFFS = false;
-    if (ArduinoOTA.getCommand() == U_FLASH) {
-      type = "sketch";
-    } else { // U_SPIFFS
-      type = "filesystem";
-      unmountSPIFFS = true;
-    }
-
-    // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-    if (unmountSPIFFS) SPIFFS.end();
-    SERIAL.println("Start updating " + type);
+   SERIAL.println("Start");
   });
   ArduinoOTA.onEnd([]() {
     SERIAL.println("\nEnd");

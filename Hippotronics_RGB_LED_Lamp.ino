@@ -1,6 +1,7 @@
 // Hippotronics LED lamp main program
 
 #include "hippoled.h"
+#include "sonoff.h"
 #include "config.h"
 #include "webrequests.h"
 #include "ota.h"
@@ -20,8 +21,12 @@ TelnetSpy LOG;
 AsyncWebServer server(8080);
 bool fsOK = false;
 
+
 // Lamp state
 int burning = 1, oldRed = 200, oldGreen = 200, oldBlue = 100;
+// Sonoff R3 button state
+int SonoffButton[3];
+int SonoffButBehavior[3];
 
 // Configuration
 int type = UNDEFINED;
@@ -46,6 +51,8 @@ void setup()
   SERIAL.println("Hippotronics RGB LED Lamp started, initial name: " + lampName);
   SERIAL.println("Chip real flash size: " + String(ESP.getFlashChipRealSize()));
 
+  initSonoffButtonData();
+  
   // Initialize file system
   fsOK = SPIFFS.begin();
   if (fsOK)
@@ -93,6 +100,9 @@ void setup()
   
   // Setup internal web server
   setup_web_paths();
+
+  // Read initial button state if this is a Sonoff switch
+  readSonoffButtons(SonoffButton);
 }
 
 
@@ -109,7 +119,9 @@ void loop()
     ESP.restart();
   }
 
-  delay(1000);
+  if (type == SONOFF_SWITCH) sonoffLoop();
+  
+  delay(100);
 
   // See if over-the-air upgrade (OTA) is available
   handleOTA();
@@ -149,6 +161,9 @@ void setRGB(const int burn, const int red, const int green, const int blue)
       case SWITCH:
         digitalWrite(SWITCH_PIN, LOW);
         break;
+
+      case SONOFF_SWITCH:
+        digitalWrite(SONOFF_SWITCH_PIN, LOW);
     }
   }
   else
@@ -173,6 +188,10 @@ void setRGB(const int burn, const int red, const int green, const int blue)
       case SWITCH:
         digitalWrite(SWITCH_PIN, HIGH);
         break;
+
+      case SONOFF_SWITCH:
+        digitalWrite(SONOFF_SWITCH_PIN, HIGH);
+
     }
   }
 }
@@ -192,6 +211,11 @@ void switch_on()
 bool isOn()
 {
   return (1 == burning);
+}
+
+void toggle()
+{
+  if (isOn()) switch_off(); else switch_on();  
 }
 
 void set_name(String val)
@@ -244,9 +268,17 @@ void setupLamp()
       // One digital output
       pinMode(SWITCH_PIN, OUTPUT);
       break;
+
+    case SONOFF_SWITCH:
+      // One digital output for relay, one for LED
+      // Three digital inputs for buttons
+      pinMode(SONOFF_SWITCH_PIN, OUTPUT);
+      pinMode(SONOFF_LED, OUTPUT);
+      pinMode(SONOFF_BUTTON_1, INPUT);
+      pinMode(SONOFF_BUTTON_2, INPUT);
+      pinMode(SONOFF_BUTTON_3, INPUT);
+      break;
   }
 
     setRGB(0,0,0,0);                // Default is off
 }
-
-
