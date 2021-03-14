@@ -25,6 +25,12 @@ void setupWifiManager()
     wifiManager.autoConnect("Hippotronics");
 }
 
+void resetWifi()
+{
+   WiFiManager wifiManager;
+
+   wifiManager.resetSettings();
+}
 
 bool isWifiConnected()
 {

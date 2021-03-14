@@ -75,6 +75,13 @@ void setup()
   }
 
   // Wifi auto-config magic
+  if (lampName == "ResetWiFi") 
+  {      
+      lampName = "ResetWifi_done";
+      save_config();
+      resetWifi();
+  }
+
   setupWifiManager();
   
   // Register with MDNS

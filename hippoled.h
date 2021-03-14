@@ -18,7 +18,7 @@
 
 #include <TelnetSpy.h>          // Include logging via telnet
 
-#define VERSION "3.6.0"
+#define VERSION "3.6.1"
 
 
 /// PIN DEFINITIONS
@@ -70,6 +70,7 @@ void set_name(String val);
 bool isOn();
 void setupLamp();
 void setupWifiManager();
+void resetWifi();
 bool isWifiConnected();
 
 // Web server
