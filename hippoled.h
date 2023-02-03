@@ -2,7 +2,7 @@
 #include <AsyncEventSource.h>
 #include <AsyncJson.h>
 #include <AsyncWebSocket.h>
-#include <ESPAsyncWebServer.h>
+#include <ESPAsyncWebSrv.h>
 #include <SPIFFSEditor.h>
 #include <StringArray.h>
 #include <WebAuthentication.h>
@@ -16,9 +16,9 @@
 #include <SyncClient.h>
 #include <tcp_axtls.h>
 
-#include <TelnetSpy.h>          // Include logging via telnet
+#include "TelnetSpy.h"          // Include logging via telnet
 
-#define VERSION "3.6.1"
+#define VERSION "3.7.1"
 
 
 /// PIN DEFINITIONS
@@ -44,10 +44,10 @@
 #ifdef LOGTELNET
 
 extern TelnetSpy LOG;
-#define SERIAL LOG
+#define SERIALPORT LOG
 
 #else
-#define SERIAL Serial
+#define SERIALPORT Serial
 #endif
 
 // New in version 3.5: lamp type

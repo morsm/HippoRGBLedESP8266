@@ -22,26 +22,26 @@ void setupOTA()
   // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
 
   ArduinoOTA.onStart([]() {
-   SERIAL.println("Start");
+   SERIALPORT.println("Start");
   });
   ArduinoOTA.onEnd([]() {
-    SERIAL.println("\nEnd");
+    SERIALPORT.println("\nEnd");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    SERIAL.printf("Progress: %u%%\r", (progress / (total / 100)));
+    SERIALPORT.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    SERIAL.printf("Error[%u]: ", error);
+    SERIALPORT.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR) {
-      SERIAL.println("Auth Failed");
+      SERIALPORT.println("Auth Failed");
     } else if (error == OTA_BEGIN_ERROR) {
-      SERIAL.println("Begin Failed");
+      SERIALPORT.println("Begin Failed");
     } else if (error == OTA_CONNECT_ERROR) {
-      SERIAL.println("Connect Failed");
+      SERIALPORT.println("Connect Failed");
     } else if (error == OTA_RECEIVE_ERROR) {
-      SERIAL.println("Receive Failed");
+      SERIALPORT.println("Receive Failed");
     } else if (error == OTA_END_ERROR) {
-      SERIAL.println("End Failed");
+      SERIALPORT.println("End Failed");
     }
   });
   ArduinoOTA.begin();

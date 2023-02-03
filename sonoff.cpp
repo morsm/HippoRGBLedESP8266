@@ -14,7 +14,7 @@ void readSonoffButtons(int *dest)
 
 void sonoffButtonPush(int but)
 {
-  SERIAL.println("Sonoff Button " + String(but) + " pressed");
+  SERIALPORT.println("Sonoff Button " + String(but) + " pressed");
   String butname = lampName + String("_button_") + but;
   char *szLampName = (char *) butname.c_str();
 

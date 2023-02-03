@@ -1,4 +1,5 @@
 // Hippotronics LED lamp main program
+// Branch: PWMchopper
 
 #include "hippoled.h"
 #include "sonoff.h"
@@ -36,8 +37,8 @@ bool gResetFlag = false;
 
 void setup()
 {
-  SERIAL.print("Hippotronics RGB_LED_Lamp ");
-  SERIAL.println(VERSION);
+  SERIALPORT.print("Hippotronics RGB_LED_Lamp PWM chopper ");
+  SERIALPORT.println(VERSION);
   
   // if analog input pin 0 is unconnected, random analog
   // noise will cause the call to randomSeed() to generate
@@ -47,9 +48,9 @@ void setup()
   // Generate random postfix for LED first time around
   lampName = "HippotronicsLED-" + String(random(1000, 2000));
   
-  SERIAL.begin(74880);
-  SERIAL.println("Hippotronics RGB LED Lamp started, initial name: " + lampName);
-  SERIAL.println("Chip real flash size: " + String(ESP.getFlashChipRealSize()));
+  SERIALPORT.begin(74880);
+  SERIALPORT.println("Hippotronics RGB LED Lamp started, initial name: " + lampName);
+  SERIALPORT.println("Chip real flash size: " + String(ESP.getFlashChipRealSize()));
 
   initSonoffButtonData();
   
@@ -57,7 +58,7 @@ void setup()
   fsOK = SPIFFS.begin();
   if (fsOK)
   {
-    SERIAL.println("File system ready");
+    SERIALPORT.println("File system ready");
     
     bool bConfigSuccess = load_config();
     
@@ -71,7 +72,7 @@ void setup()
   }
   else
   {
-    SERIAL.println("File system not available");
+    SERIALPORT.println("File system not available");
   }
 
   // Wifi auto-config magic
@@ -88,11 +89,11 @@ void setup()
   String mdnsName = "HippoLed-" + lampName;
   if (!MDNS.begin(mdnsName.c_str())) 
   {             
-    SERIAL.println("Error setting up MDNS responder!");
+    SERIALPORT.println("Error setting up MDNS responder!");
   }
   else
   {
-    SERIAL.println("mDNS responder started with name " + mdnsName);
+    SERIALPORT.println("mDNS responder started with name " + mdnsName);
 
     // Add service
     MDNS.addService("http", "tcp", 80);

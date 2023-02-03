@@ -5,6 +5,8 @@
 #include "webrequests.h"
 #include "sonoff.h"
 
+#include <ArduinoJson.h>
+
 void handle_index(AsyncWebServerRequest *request)
 {
   String response("<h1>Hippotronics LED lamp</h1>"
@@ -190,9 +192,9 @@ void handle_setconfig_json(AsyncWebServerRequest *request, const char *data)
   int newType = type;
   bool bReset = false;
 
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& obj = jsonBuffer.parseObject(data);
-
+  StaticJsonDocument<200> obj;
+  DeserializationError error = deserializeJson(obj, data);
+  
   if (obj.containsKey("name"))
   {
     String val = obj["name"].as<String>();
@@ -272,15 +274,14 @@ void report_status_json(AsyncWebServerRequest *request)
 {
   AsyncResponseStream *response = request->beginResponseStream("text/json");
 
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& obj = jsonBuffer.createObject();
+  StaticJsonDocument<200> obj;
 
   obj["burn"] = burning;
   obj["red"] = oldRed;
   obj["green"] = oldGreen;
   obj["blue"] = oldBlue;   
 
-  obj.printTo(*response);
+  serializeJson(obj, *response);
   request->send(response);
 }
 
@@ -288,14 +289,13 @@ void report_config_json(AsyncWebServerRequest *request)
 {
   AsyncResponseStream *response = request->beginResponseStream("text/json");
 
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& obj = jsonBuffer.createObject();
+  StaticJsonDocument<200> obj;
 
   obj["type"] = type;
   obj["name"] = lampName;
   obj["behavior"] = startAfterPowerOff;
 
-  obj.printTo(*response);
+  serializeJson(obj, *response);
   request->send(response);
 }
 
@@ -305,12 +305,11 @@ void report_version_json(AsyncWebServerRequest *request)
 {
   AsyncResponseStream *response = request->beginResponseStream("text/json");
 
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& obj = jsonBuffer.createObject();
+  StaticJsonDocument<200> obj;
 
   obj["version"] = VERSION;
 
-  obj.printTo(*response);
+  serializeJson(obj, *response);
   request->send(response);
 }
 
@@ -355,8 +354,8 @@ void handle_rgb_json(AsyncWebServerRequest *request, const char *data)
 {
   int newBurning = burning, newRed = oldRed, newGreen = oldGreen, newBlue = oldBlue;
 
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& obj = jsonBuffer.parseObject(data);
+  StaticJsonDocument<200> obj;
+  DeserializationError error = deserializeJson(obj, data);
 
   if (obj.containsKey("burn")) newBurning = obj["burn"];
   if (obj.containsKey("red")) newRed = obj["red"];
